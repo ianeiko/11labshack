@@ -73,4 +73,10 @@ The simulation isn't just noise; it's data. Every agent fills out a structured q
   * **Backend:** **FastAPI** (Python) for state management.
   * **AI:** n8n-mcp, claude/gemini driven development, github/code rabbit - traditional engineering to keep sanity.
   * **Auth:** **Clerk** (User history).
-  * **Code Quality:** **CodeRabbit**.
+   * **Code Quality:** **CodeRabbit**.
+
+## Next Steps
+
+Best thing to do right now is explore a way to use ai driven development for hack day. We want:
+- n8n-mcp workflow setup (https://github.com/czlonkowski/n8n-mcp) <--- Eimantas
+- fastapi/clerk/datastore/react/elevenlabs ui lib/bolt? workflow figured out <--- Meinardas
