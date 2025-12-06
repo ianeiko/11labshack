@@ -1,60 +1,76 @@
-# Project Name: Pax Populi (Peace of the People)
+# 📻 Pax Populi: The Infinite Town Hall
 **Tagline:** The Infinite Town Hall.
 
 ## 🎯 The Mission
-To simulate a massive electorate debate by spinning up **100 unique AI Agents (50 concurrent pairs)**. We use a multile models approach where different LLMs drive different personalities. The user interacts via a tactile **Rotary Dial**, tuning into these conversations like finding stations on a radio.
 
-## 🌟 The "Winning" Demo (The 2-Minute Video)
-* **The Hook:** "We didn't just ask one AI. We asked 100."
-* **The Visual:** A minimalist, dark-mode UI centered around a large, glowing **Rotary Dial**.
-* **The Action:** The user spins the dial. Initially, we hear crowd noise (ElevenLabs SFX), then it locks onto "Frequency 1-50": A debate between a "Grok-powered" Libertarian and a "Claude-powered" Academic.
-* **The Climax:** The "Consensus Report." The simulation ends after each pair rotates twice around, and we see a high-level summary of how the *entire* town's opinion shifted.
+To simulate a debate between **100 unique AI Personas (50 concurrent pairs)**. We use a multile models approach where different LLMs drive different personalities (think: concerned mother, a student, a retired person, a libertarian, a conservative, etc). The personas debate a complex topic and rotate partners keeping track of how their opinions are changinge. The user interacts via a tactile **Rotary Dial**, tuning into these conversations like finding stations on a radio. At the end of the debate, we show a **Consensus Report** - explaining the insights on how the entire town shifted their stance.
 
-## 🛠️ Core Features
+## 🌟 The Experience (Demo Flow)
 
-### 1. The Interface: The Rotary Dial
-* **Start with the Dial** .
-* **Haptic Visuals:** As you turn the dial, the UI creates "interference" visuals.
-* **Locking In:** When the dial stops on a "frequency" (a specific pair), the interference clears.
-* **Active View:**
-    * **Live Waveform:** Using ElevenLabs UI Blocks.
-    * **Live Transcript:** Scrolling text of the current dialogue.
-    * **Profile Overlay:** A simple popup triggered by the user to see who is speaking (e.g., "The Skeptic" vs "The Optimist").
+1.  **The Atmosphere:** The app opens in darkness. You hear the ambient hum of a massive crowd (ElevenLabs SFX). A glowing **Rotary Dial** sits in the center.
+2.  **The Spin:** The user rotates the dial. Heavy radio static and interference plays *only* while the dial is in motion.
+3.  **The Lock-In:** The dial stops on "Frequency 12." The static cuts out.
+4. We hear current debate, an elevenlabs voice transcribing the model's output, then the voice tunes out and we play a summary
+4.  **The Smart Tune-In:**
+      * The system generates a quick **Narrated Summary** of the argument *so far* (e.g., *"The Skeptic is currently pressing the Academic on inflation data..."*).
+      * The audio then cross-fades back into the **Live Feed**, dropping you mid-sentence into the raw audio of the two agents debating.
+5.  **The Insight:** After all the debators have rotated, the debate concludes and we show a **Consensus Report**— explaining how the 100 agents shifted their stance from their pre-debate questionnaire to their post-debate conclusion, high level insights, maybe even breaking third wall and analyzing which of the models leans which way.
 
-### 2. The Engine: Multi-Model Orchestrator (n8n)
-We assign specific LLMs to specific personality archetypes to ensure genuine diversity of thought:
-* **Grok:** Powers the "Contrarian/Edgy" agents.
-* **Claude:** Powers the "Nuanced/Academic" agents.
-* **Gemini:** Powers the "Data-Driven/Analytic" agents.
-* **OpenAI:** Powers the "General Populace/Normie" agents.
-* *Note:* These models generate the **Text**. ElevenLabs is used exclusively for the **Voice** generation when the user tunes in.
+-----
 
-### 3. The "Meta-Analysis" (The Closer)
-* **The Global Summary:** Once the simulation concludes (or the user clicks "End Town Hall"), the system aggregates the results of all 50 debates.
-* **The Shift:** It produces a report answering:
-    * *Who won?* (Which arguments were most persuasive?)
-    * *The Drift:* "At the start, 60% opposed. Now, only 40% oppose."
-    * *Key Insight:* "The 'Grok' agents successfully persuaded the 'Claude' agents on economic points."
+## 🧠 The Engine: Multi-Model Orchestrator (n8n)
+
+We do not rely on a single LLM to generate our "crowd." We assign specific LLMs to specific personality archetypes to ensure genuine diversity of thought and speech patterns:
+
+  * **Grok:** Powers the **"Contrarian/Edgy"** agents.
+  * **Claude:** Powers the **"Nuanced/Academic"** agents.
+  * **Gemini:** Powers the **"Data-Driven/Analytic"** agents.
+  * **OpenAI:** Powers the **"General Populace/Normie"** agents.
+
+> *Note:* These models generate the **Text** and personality logic. **ElevenLabs** is used exclusively for the high-fidelity **Voice** generation and SFX when the user tunes in.
+
+-----
+
+## 📊 The "Meta-Analysis" (The Closer)
+
+The simulation isn't just noise; it's data. Every agent fills out a structured questionnaire regarding their stance on the topic *before* and *after* the debate.
+
+  * **The Global Summary:** Once the simulation concludes, the system aggregates the results of all 50 debates.
+  * **The Shift:** It produces a report answering:
+      * *TLDR:* (Which arguments were most persuasive?)
+      * *The Drift:* "At the start, 60% opposed. Now, only 40% oppose."
+      * *Key Insight:* "The 'Grok' agents successfully persuaded the 'Claude' agents on economic points."
+
+-----
 
 ## 🏗️ Tech Stack & Workflow
 
-1.  **Frontend:** **Bolt** (Elevenlabs UI lib)
-2.  **Orchestration:** **n8n**.
-    * *Workflow:* User Topic -> Spawn 100 Personas -> Assign LLMs -> Run Chat Loops in background.
-3.  **Voice:** **ElevenLabs API**.
-    * *Trigger:* We only generate audio for the *active* frequency to save latency/credits.
-    * *Voices:* Diverse VoiceIDs assigned to the agents.
-4.  **Auth:** **Clerk**.
-5.  **Code Quality:** **CodeRabbit**.
+### 1\. Frontend (The Radio)
 
-## 🎬 The Demo Script (Video Flow)
+  * **Tech:** **Bolt** (React/Vite/Tailwind) + ElevenLabs UI Library mono theme.
+  * **Component:** Custom SVG **Rotary Dial** with haptic visual feedback.
+  * **Visuals:** Live waveform amplitude bars and scrolling teleprompter text.
 
-1.  **0:00 - 0:20: The Setup.** "We want to know what EU thinks about age verification policy in the context of developing AI technologies. Let's spin up 100 agents."
-2.  **0:20 - 0:50: The Dial.** The dial spins. Static noise.
-    * *Stop 1:* Hear a Gemini Agent debating a Grok Agent. The conversation is intense. The text scrolls.
-    * *Stop 2:* Spin the dial. Hear a Claude Agent vs OpenAI Agent. Totally different tone.
-3.  **0:50 - 1:10: The Profile.** Click on the Grok Agent. Popup: "Personality: Radical | Initial Stance: Against."
-4.  **1:10 - 1:40: The Summary.** "Let's see the result." Screen transitions to the **Consensus Dashboard**.
-    * *Audio Summary:* A generated news-anchor voice (ElevenLabs) reads: "In today's session, the town shifted 15% toward favorability..."
-    * *Visual:* A graph showing the opinion delta.
-5.  **1:40 - 2:00: Outro.** "Pax Populi. The future of polling is simulation."
+### 2\. Orchestration (The Brain)
+
+  * **Tech:** **n8n-mcp**, json files for workflows, claude/gemini driven development, github/code rabbit - traditional engineering to keep sanity.
+  * **Workflow:**
+    1.  User Selects Topic (e.g., "The EU AI Act").
+    2.  We prepare extensive material on the subject, a result of deep research showing different positions on the topic.
+    3.  Then we spawn 100 Personas (JSON profiles).
+    4.  Assigns Provider (Grok/Claude/Gemini/OpenAI) based on archetype.
+    5.  Initiates 50 concurrent chat loops in the background.
+
+### 3\. Audio Engine (The Voice)
+
+  * **Tech:** **ElevenLabs API**.
+  * **Efficiency:** We only generate audio for the *active* frequency to save latency and credits.
+  * **Voices:** 50 distinct Voice pairs mapped to the agent profiles.
+  * **SFX:** Procedural static generated during dial rotation.
+
+### 4\. Infrastructure
+
+  * **Backend:** **FastAPI** (Python) for state management.
+  * **AI:** n8n-mcp, claude/gemini driven development, github/code rabbit - traditional engineering to keep sanity.
+  * **Auth:** **Clerk** (User history).
+  * **Code Quality:** **CodeRabbit**.
