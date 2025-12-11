@@ -18,27 +18,6 @@
     },
     {
       "parameters": {
-        "values": {
-          "string": [
-            {
-              "name": "text",
-              "value": "={{ $json.text || 'Test audio generation' }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "name": "Set Default Data",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 1,
-      "position": [
-        450,
-        300
-      ],
-      "id": "set-default-data"
-    },
-    {
-      "parameters": {
         "resource": "speech",
         "voice": {
           "__rl": true,
@@ -46,14 +25,14 @@
           "mode": "list",
           "cachedResultName": "Gabija"
         },
-        "text": "={{ $json.text }}",
+        "text": "={{ $json.text || 'Test audio generation' }}",
         "additionalOptions": {},
         "requestOptions": {}
       },
       "type": "@elevenlabs/n8n-nodes-elevenlabs.elevenLabs",
       "typeVersion": 1,
       "position": [
-        650,
+        450,
         300
       ],
       "id": "elevenlabs-tts",
@@ -67,43 +46,14 @@
     },
     {
       "parameters": {
-        "values": {
-          "string": [
-            {
-              "name": "supabase_url",
-              "value": "={{ $vars.SUPABASE_URL.replace(/\\/$/, '') }}"
-            },
-            {
-              "name": "bucket",
-              "value": "={{ $vars.SUPABASE_BUCKET_NAME || 'audio-files' }}"
-            },
-            {
-              "name": "filename",
-              "value": "={{ $now.format('yyyyMMdd-HHmmss') }}_{{ $execution.id }}.mp3"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "name": "Configuration",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 1,
-      "position": [
-        850,
-        300
-      ],
-      "id": "configuration"
-    },
-    {
-      "parameters": {
-        "url": "={{ $json.supabase_url }}/storage/v1/object/{{ $json.bucket }}/{{ $json.filename }}",
+        "url": "={{ $env.SUPABASE_URL }}/storage/v1/object/audio-files/{{ $now.format('yyyyMMdd-HHmmss') }}_{{ $execution.id }}.mp3",
         "method": "POST",
         "authentication": "headerAuth",
         "headerParametersUi": {
           "parameter": [
             {
               "name": "Authorization",
-              "value": "Bearer {{ $vars.SUPABASE_SERVICE_ROLE_KEY }}"
+              "value": "Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
             },
             {
               "name": "Content-Type",
@@ -119,7 +69,7 @@
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 1,
       "position": [
-        1050,
+        650,
         300
       ],
       "id": "supabase-upload"
@@ -130,7 +80,7 @@
           "string": [
             {
               "name": "audio_url",
-              "value": "={{ $json.supabase_url }}/storage/v1/object/public/{{ $json.bucket }}/{{ $json.filename }}"
+              "value": "={{ $env.SUPABASE_URL }}/storage/v1/object/public/audio-files/{{ $json.Key.split('/')[1] }}"
             }
           ]
         },
@@ -140,7 +90,7 @@
       "type": "n8n-nodes-base.set",
       "typeVersion": 1,
       "position": [
-        1250,
+        850,
         300
       ],
       "id": "construct-url"
@@ -155,7 +105,7 @@
       "type": "n8n-nodes-base.respondToWebhook",
       "typeVersion": 1,
       "position": [
-        1450,
+        1050,
         300
       ],
       "id": "respond-webhook"
@@ -163,17 +113,6 @@
   ],
   "connections": {
     "Webhook": {
-      "main": [
-        [
-          {
-            "node": "Set Default Data",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Set Default Data": {
       "main": [
         [
           {
@@ -185,17 +124,6 @@
       ]
     },
     "ElevenLabs TTS": {
-      "main": [
-        [
-          {
-            "node": "Configuration",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Configuration": {
       "main": [
         [
           {
