@@ -10,103 +10,53 @@
             "type": "n8n-nodes-base.webhook",
             "typeVersion": 1,
             "position": [
-                220,
-                300
+                -768,
+                16
             ],
-            "id": "webhook-trigger",
-            "name": "Webhook"
+            "id": "9a7793ad-8a8a-45e5-8441-3eeba4996b7b",
+            "name": "Webhook",
+            "webhookId": "8ef8f4ab-34b1-4f82-9ae7-231bf5b277ec"
         },
         {
             "parameters": {
-                "options": {
-                    "systemMessage": "You are a senior researcher for a news radio station. \n\nYour goal is to research a given topic and prepare a briefing for a debate between different personas.\n\nOUTPUT FORMAT:\nYou must output a valid JSON object with exactly these keys:\n{\n  \"title\": \"A concise, neutral title for the topic\",\n  \"description\": \"A markdown formatted string containing the briefing.\"\n}\n\nThe 'description' string should follow this markdown structure:\n### Key Facts\n- [Fact 1]\n- [Fact 2]\n\n### Context\n[Why this is controversial or important]\n\n### Discussion Points\n1. [Question or Angle 1]\n2. [Question or Angle 2]\n..."
-                }
+                "jsCode": "// Parse the GPT response wrapper\nconst response = $input.first().json;\n\n// Extract content from common wrappers, otherwise fall back to response.output\nlet content =\n  response?.message?.content ??\n  response?.content ??\n  response?.output ??\n  response;\n\n// If still an object, convert to string for JSON extraction\nif (typeof content === 'object') {\n  content = JSON.stringify(content);\n}\n\n// Parse JSON from content\nlet parsed;\ntry {\n  // Try to extract JSON inside triple-backtick code blocks\n  const jsonMatch = content.match(/```(?:json)?\\s*({[\\s\\S]*?})\\s*```/);\n  if (jsonMatch) {\n    parsed = JSON.parse(jsonMatch[1]);\n  } else {\n    // Otherwise parse the whole content string\n    parsed = JSON.parse(content);\n  }\n} catch (error) {\n  throw new Error(\n    `Failed to parse GPT response as JSON: ${error.message}\\nContent: ${content}`\n  );\n}\n\n// Validate required fields\nif (!parsed.title || !parsed.description) {\n  throw new Error(`Missing required fields. Got: ${JSON.stringify(parsed)}`);\n}\n\n// Output normalized structure\nreturn {\n  json: {\n    title: parsed.title,\n    description: parsed.description\n  }\n};\n"
             },
-            "type": "@n8n/n8n-nodes-langchain.agent",
-            "typeVersion": 1.6,
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 2,
             "position": [
-                460,
-                300
+                -192,
+                144
             ],
-            "id": "ai-research-agent",
-            "name": "AI Research Agent"
-        },
-        {
-            "parameters": {
-                "model": "gpt-4o",
-                "options": {
-                    "temperature": 0.4
-                }
-            },
-            "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
-            "typeVersion": 1,
-            "position": [
-                460,
-                520
-            ],
-            "id": "openai-gpt4o",
-            "name": "OpenAI Chat Model",
-            "credentials": {
-                "openAiApi": {
-                    "id": "openai-credentials-id",
-                    "name": "OpenAI Account"
-                }
-            }
-        },
-        {
-            "parameters": {},
-            "type": "@n8n/n8n-nodes-langchain.toolSerpApi",
-            "typeVersion": 1,
-            "position": [
-                580,
-                520
-            ],
-            "id": "serp-api",
-            "name": "SerpAPI",
-            "credentials": {
-                "serpApi": {
-                    "id": "serp-api-credentials-id",
-                    "name": "SerpAPI Account"
-                }
-            }
-        },
-        {
-            "parameters": {
-                "jsonSchema": "{\n  \"type\": \"object\",\n  \"properties\": {\n    \"title\": { \"type\": \"string\" },\n    \"description\": { \"type\": \"string\" }\n  },\n  \"required\": [\"title\", \"description\"]\n}"
-            },
-            "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
-            "typeVersion": 1,
-            "position": [
-                340,
-                520
-            ],
-            "id": "structured-output",
-            "name": "Structured Output Parser"
+            "id": "9c57a6d3-d61f-4d72-b0b7-093034c70a1f",
+            "name": "Parse Response"
         },
         {
             "parameters": {
                 "tableId": "topics",
-                "limit": 1,
-                "columns": {
-                    "mappingMode": "defineBelow",
-                    "value": {
-                        "title": "={{ $json.output.title }}",
-                        "description": "={{ $json.output.description }}"
-                    }
-                },
-                "options": {}
+                "fieldsUi": {
+                    "fieldValues": [
+                        {
+                            "fieldId": "title",
+                            "fieldValue": "={{ $json.title }}"
+                        },
+                        {
+                            "fieldId": "description",
+                            "fieldValue": "={{ $json.description }}"
+                        }
+                    ]
+                }
             },
             "type": "n8n-nodes-base.supabase",
             "typeVersion": 1,
             "position": [
-                820,
-                300
+                0,
+                0
             ],
-            "id": "supabase-insert",
+            "id": "bbf9d3bf-c4b1-4e05-9ace-be3ca022a714",
             "name": "Supabase Insert",
             "credentials": {
                 "supabaseApi": {
-                    "id": "supabase-credentials-id",
+                    "id": "UUDkQWoo2rZyqjXD",
                     "name": "Supabase account"
                 }
             }
@@ -120,64 +70,75 @@
             "type": "n8n-nodes-base.respondToWebhook",
             "typeVersion": 1,
             "position": [
-                1040,
-                300
+                176,
+                0
             ],
-            "id": "respond-webhook",
+            "id": "28203a8b-aee0-4aef-a269-673ebf2b1fa0",
             "name": "Respond to Webhook"
+        },
+        {
+            "parameters": {
+                "promptType": "define",
+                "text": "={{ $json.body.chatInput }}",
+                "options": {
+                    "systemMessage": "You are a senior researcher for a news radio station. \n\nYour goal is to research a given topic and prepare a briefing for a debate between different personas.\n\nOUTPUT FORMAT:\nYou must output a valid JSON object with exactly these keys:\n{\n  \"title\": \"A concise, neutral title for the topic\",\n  \"description\": \"A markdown formatted string containing the briefing.\"\n}\n\nThe 'description' string should follow this markdown structure:\n### Key Facts\n- [Fact 1]\n- [Fact 2]\n\n### Context\n[Why this is controversial or important]\n\n### Discussion Points\n1. [Question or Angle 1]\n2. [Question or Angle 2]\n..."
+                }
+            },
+            "type": "@n8n/n8n-nodes-langchain.agent",
+            "typeVersion": 3,
+            "position": [
+                -496,
+                32
+            ],
+            "id": "6c5b7ace-d19f-4d8b-832c-90ae23b469d3",
+            "name": "AI Agent"
+        },
+        {
+            "parameters": {
+                "model": {
+                    "__rl": true,
+                    "value": "gpt-4o",
+                    "mode": "list",
+                    "cachedResultName": "gpt-4o"
+                },
+                "builtInTools": {},
+                "options": {}
+            },
+            "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+            "typeVersion": 1.3,
+            "position": [
+                -640,
+                240
+            ],
+            "id": "e52ff233-7d9a-4ccf-a21f-6e7f277aa3c4",
+            "name": "OpenAI Chat Model",
+            "credentials": {
+                "openAiApi": {
+                    "id": "KTvgXBijQZ6REPvZ",
+                    "name": "OpenAi account"
+                }
+            }
+        },
+        {
+            "parameters": {},
+            "type": "n8n-nodes-base.manualTrigger",
+            "typeVersion": 1,
+            "position": [
+                -880,
+                208
+            ],
+            "id": "589d6000-ba2d-40d0-b762-5632c3796555",
+            "name": "When clicking ‘Execute workflow’"
         }
     ],
+    "pinData": {},
     "connections": {
-        "Webhook": {
-            "main": [
-                [
-                    {
-                        "node": "AI Research Agent",
-                        "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "AI Research Agent": {
+        "Parse Response": {
             "main": [
                 [
                     {
                         "node": "Supabase Insert",
                         "type": "main",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "OpenAI Chat Model": {
-            "ai_languageModel": [
-                [
-                    {
-                        "node": "AI Research Agent",
-                        "type": "ai_languageModel",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "SerpAPI": {
-            "ai_tool": [
-                [
-                    {
-                        "node": "AI Research Agent",
-                        "type": "ai_tool",
-                        "index": 0
-                    }
-                ]
-            ]
-        },
-        "Structured Output Parser": {
-            "ai_outputParser": [
-                [
-                    {
-                        "node": "AI Research Agent",
-                        "type": "ai_outputParser",
                         "index": 0
                     }
                 ]
@@ -193,6 +154,60 @@
                     }
                 ]
             ]
+        },
+        "OpenAI Chat Model": {
+            "ai_languageModel": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "ai_languageModel",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "AI Agent": {
+            "main": [
+                [
+                    {
+                        "node": "Parse Response",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "When clicking ‘Execute workflow’": {
+            "main": [
+                [
+                    {
+                        "node": "AI Agent",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
         }
-    }
+    },
+    "active": false,
+    "settings": {
+        "executionOrder": "v1"
+    },
+    "versionId": "1742d629-491f-4e5d-9bfd-604a1b29bcd7",
+    "meta": {
+        "instanceId": "eb8b29d16896aae57f3bc27fed931cf25292c5bfd31b000454b3beb37b7fe179"
+    },
+    "id": "YGwLbGNDMTOv7HaD",
+    "tags": []
 }
