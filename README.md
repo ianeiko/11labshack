@@ -4,73 +4,116 @@
 
 ## 🎯 The Mission
 
-To simulate a debate between **11 unique AI Personas**, generating a complex web of conversations. We use a multi-model approach where different LLMs drive different personalities (think: concerned mother, a student, a retired person, a libertarian, a conservative, etc). The personas debate a complex topic and rotate partners, keeping track of how their opinions are changing.
+To generate a **multi-voiced consensus report** based on interviews with **11 unique AI Personas**. We use a multi-model approach where different LLMs drive different personalities (e.g., concerned mother, student, retired person, libertarian, conservative, etc.) to answer questions on a specific topic.
 
-The user interacts via a tactile **Rotary Dial** (and Next/Previous buttons), tuning into these conversations like finding stations on a standard FM radio band. The stations come online dynamically as conversations start. At the end of the debate, we show a **Consensus Report** - explaining the insights on how the entire town shifted their stance.
+The user interacts via a simple audio player that plays the final synthesized report, which features snippets of the different personas speaking in their own voices, woven together by a "Reporter" narrator.
 
 ## 🏗️ Architecture & Tracks
 
-### 1. Character Creation Data
+### 1. Character Creation (The 11 Personas)
 We define **11 Agents**.
-*   **Provider Independent:** Cloud providers (Grok, Claude, Gemini, OpenAI) are assigned **randomly** to agents to ensure even usage and prevent provider bias from attaching to specific personality types.
-*   **Gap Filler:** Since we have 11 agents (an 11Labs Hackathon constraint), we utilize the **11Labs Sound Effects Studio** to generate humorous audio content or "station breaks" filling the gaps between conversations.
+*   **Provider Independent:** Cloud providers (Grok, Claude, Gemini, OpenAI) and Models are assigned **randomly** to agents to ensure even usage and prevent bias.
+*   **Attributes:** Each agent has a Name, Bio (Persona), and an 11Labs Voice ID.
+*   **Storage:** Stored in Supabase `agents` table.
 
-### 2. Conversation Module
-The core logic for a single pairwise interaction.
-*   Handles the back-and-forth dialogue.
-*   Manages turn-taking and context.
-*   Outputs the raw text stream.
+### 2. Interview Module
+The core logic for gathering content.
+*   **Input:** A specific "Topic" or "Question".
+*   **Process:** Each of the 11 Agents is prompted individually to give their "take" or answer.
+*   **Output:** Text responses stored in Supabase `interviews` table.
 
-### 3. Debate Creation
+### 3. Report Generation (The Synthesis)
 The Orchestrator.
-*   **Input:** Takes the **Character Creation Data**.
-*   **Process:** Spawns the pairwise conversations.
-*   **Logic:** Manages the schedule of who talks to whom.
+*   **Input:** The set of 11 interview answers.
+*   **Process:** A "Reporter" LLM synthesizes these distinct viewpoints into a cohesive script. The script looks like a radio report, alternating between the Reporter's narration and direct quotes (soundbites) from the Personas.
+*   **Output:** A multi-speaker script.
 
-### 4. Reporting Phase
-Two tiers of reporting:
-1.  **Single Conversation Report:** A summary and analysis of a specific 1-on-1 debate.
-2.  **Aggregate Debate Report:** A holistic "Town Report" summarizing the entire event, sentiment shifts, and key winners/losers of the argument.
+### 4. Audio Production
+*   **Input:** The multi-speaker script.
+*   **Process:**
+    *   Iterate through script segments.
+    *   Use 11Labs API to generate audio for each segment using the correct Speaker's Voice ID.
+    *   Concatenate/Stitch the audio files into one single track.
+*   **Output:** Final MP3 URL stored in `reports`.
 
 ### 5. Backend & Data Layer
 *   **Database:** **Supabase (Postgres)**.
-*   **Function:** Stores debate information, active channels, and streaming status.
-*   **Integration:** N8N agents verify data against the model and write directly to Supabase.
+*   **Function:** Stores agents, interviews, and final reports.
+*   **Integration:** N8N handles all logic (Agent Gen -> Interview -> Report -> Audio).
 
 ---
 
 ## 🌟 The Experience (UI/UX)
 
-1.  **The Atmosphere:** The app opens in darkness with ambient crowd noise.
-2.  **The Interface:**
-    *   **Rotary Dial:** Ideally for browsing, but stations appear dynamically.
-    *   **Next / Previous Buttons:** **CRUCIAL ADDITION**. Since stations (conversations) come online asynchronously after rounds end, the dial alone is insufficient. Buttons allow users to jump to the next active frequency immediately.
-3.  **The Lock-In:** Tuning into a station cross-fades into the live audio of two agents calculating/debating.
-4.  **The Insight:** The final Consensus Report breaks down the "Town Hall" result.
+1.  **Simple Player:** The main interface is a clean, minimal audio player.
+2.  **The Content:** It plays the "Report" for the current topic.
+3.  **Controls:** Play/Pause. Potentially Next/Prev to switch between different Reports (topics).
 
 ---
 
-## 🧠 The Engine: N8N + MCP
+## 🛠️ Engineering & Development Standards
 
-*   **Logic:** N8N workflows orchestrate the 4 tracks (Character, Conversation, Debate, Reporting).
-*   **Tools:** Agents have tools within N8N to write to the Supabase database directly.
-*   **Verification:** A verification tool (living in a shared folder between `n8n/` and `app/`) ensures data integrity against the schema before writing.
+To strictly enforce quality and scalability, we adopt a **"Workflow as API"** development paradigm.
+
+### 1. Workflow Architecture ("The API Contract")
+*   **Single Responsibility:** Each workflow must perform exactly **one** discrete operation.
+*   **Structure:**
+    1.  **Trigger:** Webhook.
+    2.  **Process:** Business logic, DB operations, AI calls.
+    3.  **Output:** JSON response.
+
+### 2. Naming Convention & Execution Order
+*   `1.0_generate_personas.json` (Run once to seed DB with 11 agents)
+*   `2.0_conduct_interviews.json` (Run per topic; interviews all agents)
+*   `3.0_generate_report.json` (Run per topic; synthesizes interviews into script)
+*   `4.0_synthesize_audio.json` (Run per topic; turns script into audio)
+
+---
 
 ## 🛠️ Tech Stack
 
-### Frontend
-*   **Framework:** **Next.js**.
-*   **Styling:** Tailwind CSS (or custom CSS for premium feel).
-*   **State:** Reads active debate info from Supabase.
-
-### Backend / Orchestration
-*   **Orchestrator:** **n8n** (likely n8n 2.0 if compatible with MCP).
-*   **Database:** **Supabase**.
-*   **AI Models:** Mix of Grok, Claude, Gemini, OpenAI (Randomly assigned).
-*   **Audio:** **ElevenLabs API** (Voice + Sound Effects).
+*   **Orchestrator:** **n8n**
+*   **Database:** **Supabase**
+*   **AI Models:** Mix of Grok, Claude, Gemini, OpenAI (Randomly assigned)
+*   **Audio:** **ElevenLabs API**
 
 ---
 
-## 📊 The "Meta-Analysis"
+# Data Model
 
-Every agent fills out a structured questionnaire regarding their stance on the topic *before* and *after* the debate. The Global Summary aggregates this to show the "Drift" of public opinion.
+## 1. Core Tables
+
+### `agents`
+*Stores the 11 AI Personas.*
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | `UUID` | Primary Key. |
+| `name` | `TEXT` | Display name (e.g., "The Skeptic"). |
+| `bio` | `TEXT` | Persona description/System prompt. |
+| `voice_id` | `TEXT` | 11Labs Voice ID. |
+| `provider` | `TEXT` | 'grok', 'claude', 'gemini', 'openai'. |
+| `model` | `TEXT` | Specific model used (e.g. 'grok-beta'). |
+
+### `interviews`
+*Stores the raw answers from agents on a topic.*
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | `UUID` | Primary Key. |
+| `agent_id` | `UUID` | FK to `agents.id`. |
+| `topic` | `TEXT` | The general topic (e.g. "Universal Basic Income"). |
+| `question` | `TEXT` | The specific prompt asked. |
+| `answer` | `TEXT` | The agent's raw response. |
+| `created_at` | `TIMESTAMPTZ` | Default `now()`. |
+
+### `reports`
+*The final synthesized output.*
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | `UUID` | Primary Key. |
+| `topic` | `TEXT` | The topic covered. |
+| `script` | `JSONB` | Structured script (Speaker + Text segments). |
+| `audio_url` | `TEXT` | URL to the final stitched audio. |
+| `created_at` | `TIMESTAMPTZ` | Default `now()`. |
