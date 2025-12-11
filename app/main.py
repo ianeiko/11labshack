@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from app.config import settings
+from config import settings
 
 app = FastAPI(
     title="11LabsHack API",
@@ -15,7 +15,7 @@ def read_root():
 def health_check():
     return {"status": "ok", "supabase_configured": bool(settings.supabase_url and settings.supabase_key)}
 
-from app.routers import agents, interviews, reports, audio
+from routers import agents, interviews, reports, audio
 app.include_router(agents.router)
 app.include_router(interviews.router)
 app.include_router(reports.router)

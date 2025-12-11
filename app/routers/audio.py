@@ -2,9 +2,9 @@ from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from uuid import UUID
 import json
-from app.db import get_supabase
-from app.services.elevenlabs_service import elevenlabs_service
-from app.models import ConsensusReport, Agent
+from db import get_supabase
+from services.elevenlabs_service import elevenlabs_service
+from models import ConsensusReport, Agent
 
 router = APIRouter(
     prefix="/audio",

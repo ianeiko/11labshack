@@ -1,5 +1,5 @@
 from elevenlabs import generate, set_api_key
-from app.config import settings
+from config import settings
 
 class ElevenLabsService:
     def __init__(self):

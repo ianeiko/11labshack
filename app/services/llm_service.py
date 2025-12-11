@@ -1,7 +1,7 @@
 import openai
 from anthropic import Anthropic
 import google.generativeai as genai
-from app.config import settings
+from config import settings
 
 class LLMService:
     def __init__(self):

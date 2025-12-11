@@ -1,7 +1,11 @@
 .DS_Store
 .env-local
 .claude/settings.local.json
+app/__pycache__/**
+app/routers/__pycache__
+*.pyc
 n8n/backups
+app/11labshack_api.egg-info/
 
 # Logs
 logs
@@ -26,4 +30,4 @@ node_modules/
 
 # Task files
 # tasks.json
-# tasks/ 
+# tasks/

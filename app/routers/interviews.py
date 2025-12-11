@@ -3,9 +3,9 @@ from pydantic import BaseModel
 from typing import List, Optional
 from uuid import UUID
 from datetime import datetime
-from app.db import get_supabase
-from app.models import Conversation, Turn, Agent
-from app.services.llm_service import llm_service
+from db import get_supabase
+from models import Conversation, Turn, Agent
+from services.llm_service import llm_service
 
 router = APIRouter(
     prefix="/interviews",

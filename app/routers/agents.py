@@ -2,8 +2,8 @@ from fastapi import APIRouter, HTTPException
 from typing import List
 import json
 from pathlib import Path
-from app.db import get_supabase
-from app.models import AgentBase, Agent
+from db import get_supabase
+from models import AgentBase, Agent
 
 router = APIRouter(
     prefix="/agents",
@@ -16,7 +16,7 @@ def seed_agents():
     Reads agents from app/data/agents.json and inserts/updates them in Supabase.
     """
     try:
-        data_path = Path("app/data/agents.json")
+        data_path = Path("data/agents.json")
         if not data_path.exists():
             raise HTTPException(status_code=404, detail="agents.json not found")
 

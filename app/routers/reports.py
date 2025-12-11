@@ -1,9 +1,9 @@
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
 from uuid import UUID
-from app.db import get_supabase
-from app.services.llm_service import llm_service
-from app.models import ConsensusReport
+from db import get_supabase
+from services.llm_service import llm_service
+from models import ConsensusReport
 
 router = APIRouter(
     prefix="/reports",
