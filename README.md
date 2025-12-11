@@ -64,6 +64,7 @@ To strictly enforce quality and scalability, we adopt a **"Workflow as API"** de
 
 ### 2. Naming Convention & Execution Order
 *   `1.0_generate_personas.json` (Run once to seed DB with 11 agents)
+*   `1.1_create_topic_profile.json` (Run to create a new topic with AI research)
 *   `2.0_conduct_interviews.json` (Run per topic; interviews all agents)
 *   `3.0_generate_report.json` (Run per topic; synthesizes interviews into script)
 *   `4.0_synthesize_audio.json` (Run per topic; turns script into audio)
