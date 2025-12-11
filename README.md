@@ -79,12 +79,42 @@ To strictly enforce quality and scalability, we adopt a **"Workflow as API"** de
 
 ---
 
+# Database Setup
+
+## Prerequisites
+- Supabase project with Postgres database
+- Database connection configured in n8n
+
+## Initial Setup
+
+Run the database migration using the n8n workflow:
+
+1. Import the workflow: `n8n/workflows/0.2_run_migrations.json`
+2. Execute the workflow to run the SQL setup script
+3. This will create all necessary tables and enable realtime functionality
+
+Alternatively, run the SQL directly:
+```bash
+psql -h <your-supabase-host> -U postgres -f n8n/local-files/supabase_setup.sql
+```
+
+---
+
 # Data Model
 
 ## 1. Core Tables
 
+### `topics`
+*Stores discussion topics for conversations.*
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | `UUID` | Primary Key. |
+| `title` | `TEXT` | Topic title/question. |
+| `created_at` | `TIMESTAMPTZ` | Default `now()`. |
+
 ### `agents`
-*Stores the 11 AI Personas.*
+*Stores the AI Personas.*
 
 | Column | Type | Description |
 | :--- | :--- | :--- |
@@ -93,27 +123,49 @@ To strictly enforce quality and scalability, we adopt a **"Workflow as API"** de
 | `bio` | `TEXT` | Persona description/System prompt. |
 | `voice_id` | `TEXT` | 11Labs Voice ID. |
 | `provider` | `TEXT` | 'grok', 'claude', 'gemini', 'openai'. |
-| `model` | `TEXT` | Specific model used (e.g. 'grok-beta'). |
+| `created_at` | `TIMESTAMPTZ` | Default `now()`. |
 
-### `interviews`
-*Stores the raw answers from agents on a topic.*
+### `conversations`
+*Stores conversation metadata between two agents.*
 
 | Column | Type | Description |
 | :--- | :--- | :--- |
 | `id` | `UUID` | Primary Key. |
+| `agent_1_id` | `UUID` | FK to `agents.id`. |
+| `agent_2_id` | `UUID` | FK to `agents.id`. |
+| `status` | `TEXT` | 'scheduled', 'active', 'completed'. |
+| `topic_id` | `UUID` | FK to `topics.id`. |
+| `topic_title` | `TEXT` | Denormalized topic title. |
+| `full_conversation` | `TEXT` | Complete conversation text/JSON. |
+| `created_at` | `TIMESTAMPTZ` | Default `now()`. |
+
+### `turns`
+*Stores individual dialogue lines in conversations.*
+
+| Column | Type | Description |
+| :--- | :--- | :--- |
+| `id` | `BIGINT` | Primary Key (auto-increment). |
+| `conversation_id` | `UUID` | FK to `conversations.id`. |
+| `turn_number` | `INT` | Sequential turn number. |
 | `agent_id` | `UUID` | FK to `agents.id`. |
-| `topic` | `TEXT` | The general topic (e.g. "Universal Basic Income"). |
-| `question` | `TEXT` | The specific prompt asked. |
-| `answer` | `TEXT` | The agent's raw response. |
+| `text` | `TEXT` | The text response. |
+| `audio_url` | `TEXT` | 11Labs generated audio URL. |
 | `created_at` | `TIMESTAMPTZ` | Default `now()`. |
 
-### `reports`
-*The final synthesized output.*
+### `consensus_reports`
+*Final summary reports for topics.*
 
 | Column | Type | Description |
 | :--- | :--- | :--- |
 | `id` | `UUID` | Primary Key. |
-| `topic` | `TEXT` | The topic covered. |
-| `script` | `JSONB` | Structured script (Speaker + Text segments). |
-| `audio_url` | `TEXT` | URL to the final stitched audio. |
+| `topic_id` | `UUID` | FK to `topics.id`. |
+| `narrative_text` | `TEXT` | Synthesized report text. |
+| `audio_url` | `TEXT` | URL to the final audio. |
 | `created_at` | `TIMESTAMPTZ` | Default `now()`. |
+
+## 2. Realtime Features
+
+The following tables have Supabase Realtime enabled for live UI updates:
+- `conversations`
+- `turns`
+- `topics`
