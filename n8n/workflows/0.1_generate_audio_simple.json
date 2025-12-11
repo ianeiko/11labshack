@@ -1,0 +1,160 @@
+{
+  "name": "7.0_generate_audio_simple",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "7-0-generate-audio",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        250,
+        300
+      ],
+      "id": "webhook-trigger"
+    },
+    {
+      "parameters": {
+        "resource": "speech",
+        "voice": {
+          "__rl": true,
+          "value": "o6wWYxvs0GcXhwIFuTTF",
+          "mode": "list",
+          "cachedResultName": "Gabija"
+        },
+        "text": "={{ $json.text || 'Test audio generation' }}",
+        "additionalOptions": {},
+        "requestOptions": {}
+      },
+      "type": "@elevenlabs/n8n-nodes-elevenlabs.elevenLabs",
+      "typeVersion": 1,
+      "position": [
+        450,
+        300
+      ],
+      "id": "elevenlabs-tts",
+      "name": "ElevenLabs TTS",
+      "credentials": {
+        "elevenLabsApi": {
+          "id": "IHKfLaCrMUGToUQt",
+          "name": "ElevenLabs account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "={{ $env.SUPABASE_URL }}/storage/v1/object/audio-files/{{ $now.format('yyyyMMdd-HHmmss') }}_{{ $execution.id }}.mp3",
+        "method": "POST",
+        "authentication": "headerAuth",
+        "headerParametersUi": {
+          "parameter": [
+            {
+              "name": "Authorization",
+              "value": "Bearer {{ $env.SUPABASE_SERVICE_ROLE_KEY }}"
+            },
+            {
+              "name": "Content-Type",
+              "value": "audio/mpeg"
+            }
+          ]
+        },
+        "sendBinaryData": true,
+        "binaryPropertyName": "data",
+        "options": {}
+      },
+      "name": "Supabase Storage Upload",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 1,
+      "position": [
+        650,
+        300
+      ],
+      "id": "supabase-upload"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "audio_url",
+              "value": "={{ $env.SUPABASE_URL }}/storage/v1/object/public/audio-files/{{ $json.Key.split('/')[1] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Construct URL",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        850,
+        300
+      ],
+      "id": "construct-url"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        1050,
+        300
+      ],
+      "id": "respond-webhook"
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "ElevenLabs TTS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ElevenLabs TTS": {
+      "main": [
+        [
+          {
+            "node": "Supabase Storage Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Supabase Storage Upload": {
+      "main": [
+        [
+          {
+            "node": "Construct URL",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Construct URL": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

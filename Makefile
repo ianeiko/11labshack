@@ -36,7 +36,8 @@ n8n-logs:
 .PHONY: import
 import:
 	@echo "Importing cleaned workflows (IDs stripped, inactive)..."
-	@cd n8n && python3 scripts/clean_import.py
+	@if [ -f .env ]; then set -a; . .env; set +a; fi; \
+	cd n8n && python3 scripts/clean_import.py
 
 
 # Delete all workflows
