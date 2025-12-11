@@ -16,15 +16,14 @@ class LLMService:
         # Gemini
         if settings.gemini_api_key:
             genai.configure(api_key=settings.gemini_api_key)
-            self.gemini_model = genai.GenerativeModel('gemini-pro')
+            self.gemini_model = genai.GenerativeModel('gemini-1.5-flash')
 
-        # Grok (assuming OpenAI compatible endpoint or just checking key)
+        # Grok (via OpenAI compatible endpoint)
         if settings.grok_api_key:
-            # Placeholder for Grok: using separate OpenAI client if base_url provided, or just generic request
-            # For now, we'll assume standard OpenAI client configuration can handle it if base_url is changed,
-            # but without a specific Grok SDK, we might stub it or use OpenAI client with Grok base URL.
-            # Let's assume Grok uses OpenAI SDK with a different base URL or model name.
-            pass
+            self.grok_client = openai.OpenAI(
+                api_key=settings.grok_api_key,
+                base_url=settings.grok_base_url
+            )
 
     async def generate_response(self, provider: str, model: str | None, system_prompt: str, user_prompt: str) -> str:
         try:
@@ -32,7 +31,7 @@ class LLMService:
                 if not getattr(self, 'openai_client', None):
                     return "Error: OpenAI API key not configured."
                 response = self.openai_client.chat.completions.create(
-                    model=model or "gpt-3.5-turbo", # Default or specified
+                    model=model or "gpt-4-turbo",
                     messages=[
                         {"role": "system", "content": system_prompt},
                         {"role": "user", "content": user_prompt}
@@ -56,20 +55,31 @@ class LLMService:
             elif provider == 'gemini':
                 if not getattr(self, 'gemini_model', None):
                     return "Error: Gemini API key not configured."
-                # Gemini typically takes system prompt in config or as first part of chat
-                # Simpler: just concat
-                full_prompt = f"System: {system_prompt}\nUser: {user_prompt}"
+                # Gemini 1.5 allows system instructions in model config, but simple concatenation is safer across versions
+                # unless we use the specific generation_config.
+                # Let's stick to concat for safety unless we're sure of the library version capabilities for system instruction.
+                # Actually, gemini-1.5-pro supports system_instruction argument in GenerativeModel constructor, but we initialized it globally.
+                # We'll use the chat/content method with a system-like preamble.
+                full_prompt = f"System Instruction: {system_prompt}\n\nUser Question: {user_prompt}"
                 response = self.gemini_model.generate_content(full_prompt)
                 return response.text
 
             elif provider == 'grok':
-                 # Placeholder
-                 return "Grok response placeholder (SDK not fully configured)"
+                if not getattr(self, 'grok_client', None):
+                    return "Error: Grok API key not configured."
+                response = self.grok_client.chat.completions.create(
+                    model=model or "grok-beta",
+                    messages=[
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt}
+                    ]
+                )
+                return response.choices[0].message.content
 
             else:
                 return f"Error: Unknown provider {provider}"
 
         except Exception as e:
-            return f"Error generation response from {provider}: {str(e)}"
+            return f"Error generating response from {provider}: {str(e)}"
 
 llm_service = LLMService()
