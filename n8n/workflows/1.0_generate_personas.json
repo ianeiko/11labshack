@@ -1,0 +1,105 @@
+{
+    "name": "1.0_generate_personas",
+    "nodes": [
+        {
+            "parameters": {
+                "httpMethod": "POST",
+                "path": "1-0-generate-personas",
+                "options": {}
+            },
+            "name": "Webhook",
+            "type": "n8n-nodes-base.webhook",
+            "typeVersion": 1,
+            "position": [
+                250,
+                300
+            ],
+            "id": "webhook-trigger"
+        },
+        {
+            "parameters": {
+                "jsCode": "const agents = [\n  {\n    name: \"The Concerned Mother\",\n    bio: \"A 42-year-old local school teacher and mother of two. She worries about the safety of her children and the quality of education. She is empathetic but protective.\",\n    voice_id: \"EXAVITQu4vr4xnSDxMaL\",\n    provider: \"claude\"\n  },\n  {\n    name: \"The College Student\",\n    bio: \"A 21-year-old political science major. Idealistic, well-read, and eager to drive change. Often cites academic theories and recent social movements.\",\n    voice_id: \"TxGEqnHWrfWFTfGW9XjX\",\n    provider: \"openai\"\n  },\n  {\n    name: \"The Retired Veteran\",\n    bio: \"A 68-year-old retired army officer. Values discipline, tradition, and patriotism. Skeptical of rapid change and government overreach.\",\n    voice_id: \"VR6AewLTigWg4xSOredV\",\n    provider: \"grok\"\n  },\n  {\n    name: \"The Local Business Owner\",\n    bio: \"A 50-year-old owner of a hardware store. Focused on the economy, taxes, and regulation. Pragmatic and results-oriented.\",\n    voice_id: \"pNInz6obpgDQGcFmaJgB\",\n    provider: \"gemini\"\n  },\n  {\n    name: \"The Tech Optimist\",\n    bio: \"A 29-year-old software engineer. Believes technology can solve most societal problems. Excited about AI, crypto, and automation.\",\n    voice_id: \"yoZ06aMxZJJ28mfd3POQ\",\n    provider: \"openai\"\n  },\n  {\n    name: \"The Environmentalist\",\n    bio: \"A 35-year-old activist. deeply concerned about climate change and local pollution. Prioritizes sustainability over economic growth.\",\n    voice_id: \"AZnzlk1XvdvUeBnXmlld\",\n    provider: \"claude\"\n  },\n  {\n    name: \"The Skeptic\",\n    bio: \"A 45-year-old freelancer. Distrusts mainstream media and government narratives. Always asks 'who benefits?' and looks for conspiracies.\",\n    voice_id: \"2EiwWnXFnvU5JabPnv8n\",\n    provider: \"grok\"\n  },\n  {\n    name: \"The Community Organizer\",\n    bio: \"A 38-year-old dedicated to social justice and equity. focused on housing, healthcare, and marginalized communities.\",\n    voice_id: \"CYw3kZ02Hs0563khs1Fj\",\n    provider: \"gemini\"\n  },\n  {\n    name: \"The Traditionalist\",\n    bio: \"A 60-year-old church-goer and grandmother. Values family structure, faith, and local community traditions. Concerned about moral decay.\",\n    voice_id: \"ThT5KcBeYPX3keUQqHPh\",\n    provider: \"claude\"\n  },\n  {\n    name: \"The Libertarian\",\n    bio: \"A 30-year-old who believes in minimal government intervention. Advocates for personal liberty, free markets, and property rights.\",\n    voice_id: \"ErXwobaYiN019PkySvjV\",\n    provider: \"grok\"\n  },\n  {\n    name: \"The Moderate\",\n    bio: \"A 55-year-old accountant. Looks for the middle ground and compromise. Dislikes polarization and extremism on both sides.\",\n    voice_id: \"ODq5zmih8GrVes37Dizd\",\n    provider: \"openai\"\n  }\n];\n\nreturn agents.map(agent => ({ json: agent }));"
+            },
+            "name": "Define Agents",
+            "type": "n8n-nodes-base.code",
+            "typeVersion": 1,
+            "position": [
+                450,
+                300
+            ],
+            "id": "define-agents"
+        },
+        {
+            "parameters": {
+                "tableId": "agents",
+                "columns": "name, bio, voice_id, provider",
+                "returnAll": true,
+                "options": {}
+            },
+            "id": "supabase-insert",
+            "name": "Supabase Insert",
+            "type": "n8n-nodes-base.supabase",
+            "typeVersion": 1,
+            "position": [
+                650,
+                300
+            ],
+            "credentials": {
+                "supabaseApi": {
+                    "id": "supabase-credentials-id",
+                    "name": "Supabase account"
+                }
+            }
+        },
+        {
+            "parameters": {
+                "respondWith": "json",
+                "responseBody": "={{ $json }}",
+                "options": {}
+            },
+            "name": "Respond to Webhook",
+            "type": "n8n-nodes-base.respondToWebhook",
+            "typeVersion": 1,
+            "position": [
+                850,
+                300
+            ],
+            "id": "respond-webhook"
+        }
+    ],
+    "connections": {
+        "Webhook": {
+            "main": [
+                [
+                    {
+                        "node": "Define Agents",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Define Agents": {
+            "main": [
+                [
+                    {
+                        "node": "Supabase Insert",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        },
+        "Supabase Insert": {
+            "main": [
+                [
+                    {
+                        "node": "Respond to Webhook",
+                        "type": "main",
+                        "index": 0
+                    }
+                ]
+            ]
+        }
+    }
+}
